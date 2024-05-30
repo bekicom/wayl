@@ -14,7 +14,7 @@
     max-width:400px;
   }
   #address-input {
-    width: 100%;
+    width: 93%;
     padding: 13px;
     font-size: 16px;
     border: none;
@@ -358,19 +358,53 @@ margin-bottom: 50px;
 
 
 }
+
+/* loading css */
+
+.ma{
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(102, 51, 153, 0.716);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 50px;
+  padding: 8px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #25b09b;
+  --_m: 
+    conic-gradient(#0000 10%,#000),
+    linear-gradient(#000 0 0) content-box;
+  -webkit-mask: var(--_m);
+          mask: var(--_m);
+  -webkit-mask-composite: source-out;
+          mask-composite: subtract;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {to{transform: rotate(1turn)}}
+
 </style>
 </head>
 <body>
+
+  <div class="ma">
+    <div class="loader"></div>
+  </div>
+ 
+  
     
     <div class="header">
         <img width="100%"src="https://telegra.ph/file/fd30b446812a5f9c75ed6.png" />
         
     </div>
-    
+   
 
 <input type="text" id="address-input" placeholder="Выберите адрес пункта выдачи">
 <div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
-
 
 <div class="container">
   <div class="image-container">
@@ -399,6 +433,7 @@ margin-bottom: 50px;
 </div>
   <p>Оформляем заказ</p>
 </div>
+
 
 <!-- Модальное окно -->
 <div id="myModal" class="modal">
@@ -429,7 +464,19 @@ var formattedDate = currentDate.toLocaleDateString('ru-RU', options);
 
 // Выводим дату в span элемент
 document.getElementById('date-display').textContent = formattedDate;
+const ploading =  document.querySelector('.ma')
+
+
+setTimeout(()=>{
+  ploading.style.display = 'none'
+
+
+},2000)
+
+ 
+
 </script>
+
 
 
 
@@ -459,7 +506,7 @@ document.getElementById('date-display').textContent = formattedDate;
     
     </div>
 </center>
-  
+
 </div>
 
 
