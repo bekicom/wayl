@@ -582,7 +582,6 @@ $('#address-input').on('input', function() {
     // Показываем кнопку "Оформить"
 
     setTimeout(function() {
-        blur.classList.remove('hide');
         ping.classList.add('hide');
         image.src = `${randomImage}.png`;
         image.classList.remove('hidden');
@@ -591,9 +590,9 @@ $('#address-input').on('input', function() {
         orderButton.classList.remove('hide');
         orderButton.classList.add('visible');
         
-}, 1000);
+}, 7000);
   });
-}, 3000);
+}, 1000);
     
 
   
