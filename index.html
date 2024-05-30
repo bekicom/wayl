@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Автозаполнение адреса</title>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    color: white;
+    background-color: #121212;
+    max-width:400px;
+  }
+  #address-input {
+    width: 100%;
+    padding: 13px;
+    font-size: 16px;
+    border: none;
+    border-radius: 7px;
+    outline: none;
+    margin-top:30px;
+    background-color: #252429;
+    color: white;
+    max-width: 400px;
+  }
+  .autocomplete-suggestions {
+    
+    background: #121212;
+    overflow: auto;
+    position: absolute;
+    z-index: 1000;
+    width: 90%;
+    color: #9E9DAD;
+    max-width: 400px;
+  }
+  .autocomplete-suggestion {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 0px solid #9E9DAD;
+  }
+  .autocomplete-suggestion:hover {
+    background-color: #f9f9f9;
+  }
+  @media (max-width: 600px) {
+    #address-input, .autocomplete-suggestions {
+      font-size: 12px;
+    }
+  }
+  .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+  .header img {
+      border-radius: 9px;
+  }
+  
+
+</style>
+<style>
+  .container {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+  }
+  .image-container {
+    position: relative;
+    margin-bottom: 20px;
+    
+    
+  }
+  .image {
+    margin-top: 50px;
+    max-width: 70%;
+    height: auto;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    
+  }
+  .button {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: opacity 0s ease-in-out;
+    width: 100%;
+  }
+  .button:hover {
+    background-color: #0056b3;
+  }
+  .hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .hide {
+      display: none;
+  }
+  .show {
+      display: block;
+  }
+  .visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .modal {
+    display: none; /* Скрываем модальное окно по умолчанию */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: #121212;
+    
+  }
+
+.border {
+    border: solid 1.5px #D074FF;
+    padding: 3px;
+    margin: 15px;
+    border-radius: 10px;
+    width: 40%;
+}
+.border-bg {
+    background-color: #2A2A2A;
+    border-radius: 7px;
+    padding: 15px;
+    
+}
+.deliv {
+    background-color: #2A2A2A;
+    margin: 15px;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.trans {
+    margin-left: 40px;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+.row {
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+    row-gap: 15px;
+    color: #9E9DAD;
+}
+
+.row svg {
+    flex-shrink: 0;
+    align-self: center; 
+    background-color: white;
+    border-radius: 50%;
+}
+.line {
+    width: 2px;
+    height: 45px;
+    background-color: #9E9DAD;
+    margin-left: 11px;
+    margin-top: -15px;
+    margin-bottom: -15px;
+}
+
+.max-width {
+    max-width: 400px;
+}
+
+.deldate {
+    color: gray;
+}
+
+.tg {
+    background-color: #D074FF;
+    border: none;
+    border-radius: 5px;
+    padding: 4px;
+    color: white;
+    font-weight: 600;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#orderButton, #openButton {
+    transition: opacity 0s ease-in-out;
+}
+
+
+.loading {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #121212;
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.loader {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading p {
+  margin-top: 20px;
+  color: white;
+}
+
+#qr {
+    border-radius: 9px;
+    width: 90%;
+}
+
+
+.loader2 {
+  position: relative;
+  display: flex;
+  gap: 0.3em;
+}
+
+.loader2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 2em;
+  filter: blur(45px);
+  background-color: #e299ff;
+  background-image: radial-gradient(at 52% 57%, hsla(11,83%,72%,1) 0px, transparent 50%),
+  radial-gradient(at 37% 57%, hsla(175,78%,66%,1) 0px, transparent 50%);
+}
+
+.loader__circle {
+  --size__loader: 0.6em;
+  width: var(--size__loader);
+  height: var(--size__loader);
+  border-radius: 50%;
+  animation: loader__circle__jumping 2s infinite;
+  background-color: #b499ff;
+}
+
+.loader__circle:nth-child(2n) {
+  animation-delay: 300ms;
+  background-color: #e499ff;
+}
+
+.loader__circle:nth-child(3n) {
+  animation-delay: 600ms;
+}
+
+@keyframes loader__circle__jumping {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+
+  25% {
+    transform: translateY(-15px) scale(0.5);
+  }
+
+  50% {
+    transform: translateY(0px);
+  }
+
+  75% {
+    transform: translateY(5px) scale(0.9);
+  }
+}
+
+
+
+#openButton:disabled{
+    background-color: gray;
+    opacity: 0.5;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+
+
+.ping {
+margin-bottom: 50px;
+ --uib-size: 200px;
+ --uib-speed: 1s;
+ --uib-color: #3950cf;
+ position: relative;
+ height: var(--uib-size);
+ width: var(--uib-size);
+}
+
+.ping::before,
+.ping::after {
+ content: '';
+ position: absolute;
+ top: 0;
+ left: 0;
+ height: 100%;
+ width: 100%;
+ border-radius: 50%;
+ background-color: var(--uib-color);
+ animation: pulse7132 var(--uib-speed) linear infinite;
+ transform: scale(0);
+ opacity: 0;
+}
+
+.ping::after {
+ animation-delay: calc(var(--uib-speed) / -2);
+}
+
+@keyframes pulse7132 {
+ 0% {
+  transform: scale(0);
+  opacity: 1;
+ }
+
+ 100% {
+  transform: scale(1);
+  opacity: 0;
+ }
+}
+
+
+.hide {
+    display: none;
+}
+
+.qr {
+    background-color: #212121;
+    
+    padding: 9px;
+    border-radius: 15px;
+    
+    width: 90%;
+    margin-top: 28px;
+
+
+}
+</style>
+</head>
+<body>
+    
+    <div class="header">
+        <img width="100%"src="https://telegra.ph/file/fd30b446812a5f9c75ed6.png" />
+        
+    </div>
+    
+
+<input type="text" id="address-input" placeholder="Выберите адрес пункта выдачи">
+<div id="autocomplete-suggestions" class="autocomplete-suggestions"></div>
+
+
+<div class="container">
+  <div class="image-container">
+<center>
+    <div class="blur">
+     <div id="blur"class="circle hide"></div>
+</div>
+    <img id="image" class="image hidden" src="" alt="WB Ranbox">
+
+    
+<div id="ping"class="ping hide"></div>
+    <button disabled="true"id="openButton" class="button">Открыть WB Ranbox</button>
+    <button id="loadButton" class="button hidden">Открываем...</button>
+</center>
+  </div>
+  <button id="orderButton" class="button hidden">Оформить</button>
+</div>
+
+<div id="loading" class="loading">
+  <div class="loader2">
+  <div class="loader__circle"></div>
+  <div class="loader__circle"></div>
+  <div class="loader__circle"></div>
+  <div class="loader__circle"></div>
+  <div class="loader__circle"></div>
+</div>
+  <p>Оформляем заказ</p>
+</div>
+
+<!-- Модальное окно -->
+<div id="myModal" class="modal">
+    <div class="max-width">
+        <div class="border">
+        <div class="border-bg">
+            <img width="100%" id="modalImage" src="" alt="WB Ranbox">
+        </div>
+    </div>
+    <div class="deliv">
+       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#BABABA" class="bi bi-truck" viewBox="0 0 16 16">
+  <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5zm1.294 7.456A2 2 0 0 1 4.732 11h5.536a2 2 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456M12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/>
+</svg><div class="col">&nbsp;&nbsp;&nbsp;&nbsp;Доставка ожидается<br>&nbsp;&nbsp;&nbsp;&nbsp;<span id="date-display" class="deldate">26 мая</span></div>
+    </div>
+    
+
+
+<script>
+// Получаем текущую дату
+var currentDate = new Date();
+
+// Прибавляем 3 дня к текущей дате
+currentDate.setDate(currentDate.getDate() + 3);
+
+// Форматируем дату в формат "28 мая"
+var options = { day: 'numeric', month: 'long' };
+var formattedDate = currentDate.toLocaleDateString('ru-RU', options);
+
+// Выводим дату в span элемент
+document.getElementById('date-display').textContent = formattedDate;
+</script>
+
+
+
+  
+<div class="trans">
+    <div class="line"></div>
+<div class="row">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-up-circle-fill" viewBox="0 0 16 16">
+    <path d="M16 8A8 8 0 1 0 0 8a8 8 0 0 0 16 0m-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z"/>
+</svg>  <p> Ожидает авторизации </p> <button class="tg">Войти</button>
+</div>
+<div class="line"></div>
+<div class="row">
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-up-circle-fill" viewBox="0 0 16 16">
+    <path d="M16 8A8 8 0 1 0 0 8a8 8 0 0 0 16 0m-7.5 3.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707z"/>
+</svg>  <p> Оформлен, <span id="selectedAddress"></span></p>
+</div>
+</div>
+
+
+<center>
+<div class="qr">
+    <p>Отсканируйте QR-код для получения заказа</p><br>
+    <img style="border-radius:9px; margin-bottom: 50px"width="50%" src="https://telegra.ph/file/b1a44e5080d7158dd4021.jpg">
+</div>
+    
+    
+    </div>
+</center>
+  
+</div>
+
+
+<script>
+$(document).ready(function() {
+  var addresses = [];
+
+  // Загружаем адреса из файла
+  $.get('extracted_data.txt', function(data) {
+    addresses = data.split('\n');
+  });
+// Обработчик ввода в поле адреса
+$('#address-input').on('input', function() {
+  var input = $(this).val();
+  var suggestions = addresses.filter(function(address) {
+    var addressWords = address.toLowerCase().split(', ');
+    var inputWords = input.toLowerCase().split(' ');
+    return inputWords.every(function(word) {
+      return addressWords.some(function(addressWord) {
+        return addressWord.includes(word);
+      });
+    });
+  }).slice(0, 5); // Ограничиваем количество подсказок до 10
+
+  // Отображаем подсказки
+  $('#autocomplete-suggestions').empty();
+  suggestions.forEach(function(suggestion) {
+    $('#autocomplete-suggestions').append('<div class="autocomplete-suggestion">' + suggestion + '</div>');
+  });
+
+  // Обработчик выбора подсказки
+  $('.autocomplete-suggestion').on('click', function() {
+    $('#address-input').val($(this).text());
+    $('#autocomplete-suggestions').empty();
+    document.getElementById('openButton').disabled = false;
+  });
+});
+
+});
+
+
+
+
+
+</script>
+
+
+<script>
+  const openButton = document.getElementById('openButton');
+  const loadButton = document.getElementById('loadButton');
+  const blur = document.getElementById('blur');
+  const orderButton = document.getElementById('orderButton');
+  const ping = document.getElementById('ping');
+  const image = document.getElementById('image');
+
+  openButton.addEventListener('click', function() {
+    // Плавно исчезает кнопка
+    this.classList.add('hide');
+    loadButton.classList.remove('hidden');
+    loadButton.classList.add('show');
+    ping.classList.remove('hide');
+    ping.classList.add('show');
+    setTimeout(function() {
+
+    // Показываем рандомную картинку
+    const randomImage = Math.floor(Math.random() * 12) + 1;
+    
+    
+    
+    // Показываем кнопку "Оформить"
+
+    setTimeout(function() {
+        blur.classList.remove('hide');
+        ping.classList.add('hide');
+        image.src = `${randomImage}.png`;
+        image.classList.remove('hidden');
+        image.classList.add('visible');
+        loadButton.classList.add('hidden');
+        orderButton.classList.remove('hide');
+        orderButton.classList.add('visible');
+        
+}, 1000);
+  });
+}, 2000);
+    
+
+  
+  
+  // Обработчик нажатия на кнопку "Оформить"
+  orderButton.addEventListener('click', function() {
+    var loading = document.getElementById('loading');
+    loading.style.display = "flex";
+    setTimeout(function() {
+    loading.style.display = "none";
+    modal.style.display = "block";
+    // ... остальной код ...
+  }, 2000);
+
+
+    // Показываем модальное окно
+    var modal = document.getElementById('myModal');
+    modal.style.display = "block";
+
+    // Выводим содержимое input в модальном окне
+    var selectedAddress = document.getElementById('selectedAddress');
+    selectedAddress.textContent = $('#address-input').val();
+
+    // Выводим картинку в модальном окне
+    var modalImage = document.getElementById('modalImage');
+    modalImage.src = image.src;
+
+    // Обработчик закрытия модального окна
+    var span = document.getElementsByClassName("close")[0];
+    span.onclick = function() {
+      modal.style.display = "none";
+    }
+
+
+  });
+</script>
+
+</body>
+</html>
+
+
+<style>
+.blur {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    width: 100%;
+    z-index: -1;
+    margin-top: 50px;
+}
+  .circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(lightblue, pink);
+    filter: blur(50px); /* Сила размытия */
+    animation: pulse 2s infinite, spin 5s linear infinite; /* Анимация пульса и вращения */
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(3);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>
